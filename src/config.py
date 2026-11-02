@@ -1,0 +1,104 @@
+"""Central application configurations for reinforcement learning airline schedules."""
+
+from typing import Any
+
+# Default RNG seed for every experiment (each script can override it with its own SEED knob).
+# An int makes reruns reproduce the same schedules/results; None draws a fresh seed every run
+# (genuinely new schedules) -- the seed used is still recorded in the run's config.json.
+SEED: int | None = None
+
+N_ITERATIONS: int = 3
+
+# --- STRUCTURAL CONFIGURATIONS ---
+MODEL_HYPERPARAMS: dict[str, dict[str, float]] = {
+    "DQN": {
+        "lr": 0.0005,
+        "gamma": 0.99,
+        "epsilon_decay": 0.9995,
+        "init_epsilon": 0.8,
+        "min_epsilon": 0.1,
+        "batch_size": 256,
+        "tau": 0.001,
+        "use_attention": True,
+        "use_expert_bias": True,
+        "expert_bias_weight": 0.05,
+        "use_action_masking": False,
+    },
+    "DOUBLE_DQN": {
+        "lr": 0.0005,
+        "gamma": 0.99,
+        "epsilon_decay": 0.9995,
+        "init_epsilon": 0.8,
+        "min_epsilon": 0.1,
+        "batch_size": 256,
+        "tau": 0.001,
+        "use_attention": True,
+        "use_expert_bias": True,
+        "expert_bias_weight": 0.05,
+        "use_action_masking": False,
+    },
+}
+
+MODEL_TRAINING_PARAMS: dict[str, dict[str, int]] = {
+    "DQN": {"n_episodes": 500, "log_interval": 10},
+    "DOUBLE_DQN": {"n_episodes": 500, "log_interval": 10},
+}
+
+# Ablation variants compared across experiments: each maps to hyperparameter overrides applied
+# on top of MODEL_HYPERPARAMS[algo]. "full" is the base config (no overrides). Order here is the
+# order variants are trained/displayed in.
+AGENT_VARIANT_OVERRIDES: dict[str, dict[str, Any]] = {
+    "full": {},
+    "no_bias": {
+        "use_expert_bias": False,
+        "use_action_masking": False,
+    },
+    "idle": {
+        "use_attention": False,
+        "use_expert_bias": False,
+        "use_action_masking": False,
+    },
+}
+
+# Severity parameters for the synthetic disruptions injected during disruption-recovery training.
+DISRUPTION_ACTIONS_CONFIG: dict[str, Any] = {
+    "delay_count_fraction": 1 / 3,  # fraction of flights delayed, e.g. N // 3
+    "delay_min_minutes": 60,
+    "delay_max_minutes": 180,
+    "replace_airport_field": "origin",
+    "replace_airport_method": "closest",
+}
+
+RL_TRAINING_CONFIG: dict[str, float] = {
+    "dqn_reward_scale": 0.001,
+}
+
+REWARD_CONFIG: dict[str, Any] = {
+    "train_use_clipping": True,
+    "eval_use_clipping": True,
+    "final_eval_use_clipping": True,
+    "penalty_per_min": 150,
+}
+
+EARLY_STOPPING_CONFIG: dict[str, Any] = {
+    "patience": 10000,
+    "rolling_window_size": 500,
+    "improvement_threshold": 100.0,
+    "min_epsilon_to_stop": 0.02,
+}
+
+# Every experiment run writes its config, log, results, and checkpoints to RUNS_DIR/<run_id>/.
+RUNS_DIR: str = "runs"
+
+# Optimal baseline (src/baselines/), used when an experiment sets INCLUDE_OPTIMAL_BASELINE.
+BASELINE_SOLVER_CONFIG: dict[str, Any] = {
+    # "gurobi" (`uv sync --extra gurobi` + a Gurobi license) or "cplex" (`uv sync --extra cplex`).
+    "solver": "gurobi",
+    # Max seconds per schedule. Small schedules (~10 flights) are proven optimal in about a second;
+    # ~20 flights x 3 planes can need far longer than any reasonable limit.
+    "time_limit_s": 180,
+    # True: only a plan the solver has PROVEN optimal is accepted (reported as "<Solver> (optimal)");
+    # otherwise the schedule counts as a solver failure and the experiment retries with a new one.
+    # False: the solver's best plan within the time limit is accepted ("<Solver> (best found)").
+    "require_optimal": True,
+}

@@ -1,0 +1,44 @@
+[project]
+name = "rl-scheduling-expert"
+version = "0.1.0"
+description = "Expert-guided DQN / Double DQN for airline aircraft-to-flight assignment and disruption recovery (ROADEF2009)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+main = [
+    "airportsdata>=20260315",
+    "geopy>=2.4.1",
+    "matplotlib>=3.11.0",
+    "numpy>=2.4.2",
+    "pandas>=3.0.0",
+    "scipy>=1.17.1",
+    "torch>=2.11.0",
+]
+dev = [
+    "isort>=9.0.2",
+    "pre-commit>=4.5.1",
+    "ruff>=0.15.7",
+]
+milp = [
+    "cplex>=22.2.0.1",
+    "docplex>=2.32.264",
+    "gurobipy>=12.0",
+]
+
+[tool.uv]
+default-groups = ["main", "dev", "milp"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint]
+extend-select = ["F", "I"]
